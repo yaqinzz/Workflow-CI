@@ -2,9 +2,9 @@ name: CI Workflow for ML Model - Kriteria 3 Advanced
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -21,24 +21,23 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install MLflow CLI
+      - name: 3. Install MLflow CLI
         run: pip install mlflow scikit-learn
 
-      - name: 3. Check Environment
+      - name: 4. Check Environment
         run: |
           python --version
           pip --version
           mlflow --version
 
-      - name: 4. Setup Conda Environment
+      - name: 5. Setup Conda Environment
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mlflow-env
           environment-file: MLProject/conda.yaml
-          python-version: '3.10.6'
           auto-activate-base: false
 
-      - name: 5. Run MLflow Project
+      - name: 6. Run MLflow Project
         shell: bash -l {0}
         run: |
           echo "Starting MLflow project run..."
@@ -53,7 +52,7 @@ jobs:
           fi
           cd $GITHUB_WORKSPACE
 
-      - name: 6. Get MLflow Run ID
+      - name: 7. Get MLflow Run ID
         id: get_run_id
         run: |
           # Pastikan file ada sebelum mencoba membacanya
@@ -69,7 +68,7 @@ jobs:
           echo "run_id_value=$CLEANED_RUN_ID" >> $GITHUB_OUTPUT
         working-directory: ${{ github.workspace }}
 
-      - name: 7. Upload MLflow Run Artifacts (mlruns)
+      - name: 8. Upload MLflow Run Artifacts (mlruns)
         uses: actions/upload-artifact@v4
         with:
           name: mlruns-output
@@ -77,14 +76,14 @@ jobs:
           path: ${{ github.workspace }}/MLProject/mlruns/
           if-no-files-found: warn
 
-      - name: Upload mlflow_run_id.txt
+      - name: 9. Upload mlflow_run_id.txt
         uses: actions/upload-artifact@v4
         with:
           name: mlflow-run-id-file
           path: ${{ github.workspace }}/MLProject/mlflow_run_id.txt
           if-no-files-found: warn
 
-      - name: 8. Build Docker Image with MLflow
+      - name: 10. Build Docker Image with MLflow
         env:
           MLFLOW_RUN_ID: ${{ steps.get_run_id.outputs.run_id_value }}
           # Tambahkan MLFLOW_TRACKING_URI untuk menunjuk ke direktori mlruns lokal
@@ -92,39 +91,38 @@ jobs:
         run: |
           echo "Building Docker image for Run ID: $MLFLOW_RUN_ID"
           echo "Using MLFLOW_TRACKING_URI: $MLFLOW_TRACKING_URI"
-          
+
           if [ -z "$MLFLOW_RUN_ID" ]; then
             echo "Error: MLFLOW_RUN_ID is empty. Cannot build Docker image."
             exit 1
           fi
-          
+
           # Ganti 'yaqin7' dengan username Docker Hub-mu
           # Ganti 'lung-cancer-model' dengan nama repositori Docker Hub-mu
           DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:${{ github.sha }}"
           echo "Target Docker Image Name: $DOCKER_IMAGE_NAME"
-          
+
           mlflow models build-docker \
             --model-uri "runs:/$MLFLOW_RUN_ID/model" \
             --name "$DOCKER_IMAGE_NAME" \
             --enable-mlserver
-          
+
           echo "Docker image build process initiated for $DOCKER_IMAGE_NAME"
 
-      - name: 9. Log in to Docker Hub
+      - name: 11. Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 10. Push Docker Image to Docker Hub
+      - name: 12. Push Docker Image to Docker Hub
         run: |
-          # Ganti 'fahmi123zul' dengan username Docker Hub-mu
-          # Ganti 'breast-cancer-model' dengan nama repositori Docker Hub-mu
+          # Ganti 'yaqin7' dengan username Docker Hub-mu
           DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:${{ github.sha }}"
           echo "Pushing Docker Image: $DOCKER_IMAGE_NAME"
           docker push $DOCKER_IMAGE_NAME
           echo "Docker Image pushed."
 
-      - name: 11. Log out from Docker Hub
+      - name: 13. Log out from Docker Hub
         if: always()
         run: docker logout
