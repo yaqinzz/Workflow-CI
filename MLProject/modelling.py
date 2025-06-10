@@ -5,10 +5,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 # Load data
-X_train_scaled = pd.read_csv('Lung_Cancer_preprocessing/X_train_scaled.csv')
-X_test_scaled = pd.read_csv('Lung_Cancer_preprocessing/X_test_scaled.csv')
-y_train = pd.read_csv('Lung_Cancer_preprocessing/y_train.csv')
-y_test = pd.read_csv('Lung_Cancer_preprocessing/y_test.csv')
+X_train_scaled = pd.read_csv('../Lung_Cancer_preprocessing/X_train_scaled.csv')
+X_test_scaled = pd.read_csv('../Lung_Cancer_preprocessing/X_test_scaled.csv')
+y_train = pd.read_csv('../Lung_Cancer_preprocessing/y_train.csv')
+y_test = pd.read_csv('../Lung_Cancer_preprocessing/y_test.csv')
 
 # Convert target variables to 1D arrays
 y_train = y_train.values.ravel()
@@ -16,12 +16,17 @@ y_test = y_test.values.ravel()
 
 # Set up MLflow tracking
 # dagshub.init(repo_owner='yaqinzz', repo_name='my-first-repo', mlflow=True)
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
-mlflow.set_experiment("Experiment Lung Cancer Model")
+mlflow.set_tracking_uri("file:./mlruns")
+mlflow.set_experiment("Lung_Cancer_CI_Run")
 mlflow.sklearn.autolog()
 
 # Train model and log metrics with MLflow
-with mlflow.start_run():
+with mlflow.start_run() as run:
+    run_id = run.info.run_id
+    # Save run ID to file for GitHub Actions workflow
+    with open("mlflow_run_id.txt", "w") as f:
+        f.write(run_id)
+        
     # Create and train the model
     model = RandomForestClassifier(
         n_estimators=100,

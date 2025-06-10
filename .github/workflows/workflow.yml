@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
 
       - name: 3. Install MLflow CLI
-        run: pip install mlflow scikit-learn
+        run: pip install mlflow scikit-learn pandas numpy
 
       - name: 4. Check Environment
         run: |
@@ -34,7 +34,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: mlflow-env
-          environment-file: MLProject/conda.yaml
+          python-version: '3.10'
+          auto-update-conda: true
           auto-activate-base: false
 
       - name: 6. Run MLflow Project
@@ -72,7 +73,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mlruns-output
-          # Path harus benar relatif dari GITHUB_WORKSPACE
           path: ${{ github.workspace }}/MLProject/mlruns/
           if-no-files-found: warn
 
@@ -86,7 +86,6 @@ jobs:
       - name: 10. Build Docker Image with MLflow
         env:
           MLFLOW_RUN_ID: ${{ steps.get_run_id.outputs.run_id_value }}
-          # Tambahkan MLFLOW_TRACKING_URI untuk menunjuk ke direktori mlruns lokal
           MLFLOW_TRACKING_URI: file://${{ github.workspace }}/MLProject/mlruns
         run: |
           echo "Building Docker image for Run ID: $MLFLOW_RUN_ID"
@@ -97,8 +96,6 @@ jobs:
             exit 1
           fi
 
-          # Ganti 'yaqin7' dengan username Docker Hub-mu
-          # Ganti 'lung-cancer-model' dengan nama repositori Docker Hub-mu
           DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:${{ github.sha }}"
           echo "Target Docker Image Name: $DOCKER_IMAGE_NAME"
 
@@ -117,7 +114,6 @@ jobs:
 
       - name: 12. Push Docker Image to Docker Hub
         run: |
-          # Ganti 'yaqin7' dengan username Docker Hub-mu
           DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:${{ github.sha }}"
           echo "Pushing Docker Image: $DOCKER_IMAGE_NAME"
           docker push $DOCKER_IMAGE_NAME
