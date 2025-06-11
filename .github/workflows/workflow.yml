@@ -96,7 +96,7 @@ jobs:
             exit 1
           fi
 
-          DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:${{ github.sha }}"
+          DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:latest"
           echo "Target Docker Image Name: $DOCKER_IMAGE_NAME"
 
           mlflow models build-docker \
@@ -114,7 +114,7 @@ jobs:
 
       - name: 12. Push Docker Image to Docker Hub
         run: |
-          DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:${{ github.sha }}"
+          DOCKER_IMAGE_NAME="yaqin7/lung-cancer-model:latest"
           echo "Pushing Docker Image: $DOCKER_IMAGE_NAME"
           docker push $DOCKER_IMAGE_NAME
           echo "Docker Image pushed."
