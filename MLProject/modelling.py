@@ -56,7 +56,7 @@ try:
         mlflow.log_metric("f1_score", f1)
 
         # Log model explicitly (optional but useful)
-        mlflow.sklearn.log_model(model, "model", artifact_path="model",)
+        mlflow.sklearn.log_model(sk_model= model, artifact_path="model",)
 
         print("Model trained and logged to MLflow.")
         print(f"Accuracy: {acc}, Precision: {prec}, Recall: {rec}, F1 Score: {f1}")
