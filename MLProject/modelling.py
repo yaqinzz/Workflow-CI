@@ -5,6 +5,7 @@ import json
 import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from mlflow.models.signature import infer_signature
 
 # Load data
 X_train_scaled = pd.read_csv('../Lung_Cancer_preprocessing/X_train_scaled.csv')
@@ -49,14 +50,22 @@ try:
         rec = recall_score(y_test, y_pred, average='macro')
         f1 = f1_score(y_test, y_pred, average='macro')
 
-        # Log additional metrics (autolog already does this)
+        # Log additional metrics
         mlflow.log_metric("accuracy", acc)
         mlflow.log_metric("precision", prec)
         mlflow.log_metric("recall", rec)
         mlflow.log_metric("f1_score", f1)
 
-        # Log model explicitly (optional but useful)
-        mlflow.sklearn.log_model(sk_model= model, artifact_path="model",)
+        # Infer signature for model input/output
+        signature = infer_signature(X_test_scaled, y_pred)
+
+        # Save and log the model
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="model",
+            signature=signature,
+            input_example=X_test_scaled.iloc[:5]  # Optional input example
+        )
 
         print("Model trained and logged to MLflow.")
         print(f"Accuracy: {acc}, Precision: {prec}, Recall: {rec}, F1 Score: {f1}")
@@ -80,6 +89,6 @@ except Exception as e:
     print(f"[ERROR] Something went wrong: {e}")
     raise
 
-# Optional: check file exists after run
+# Optional: check if file exists
 if not os.path.exists("mlflow_run_id.txt"):
     raise FileNotFoundError("mlflow_run_id.txt was not created.")
